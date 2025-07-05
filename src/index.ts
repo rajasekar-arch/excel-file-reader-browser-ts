@@ -38,22 +38,41 @@ export async function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
 }
 
 /**
- * Reads an Excel file (from a File object) and returns the count of rows up to the maximum row
+ * Processes the input data (File, ArrayBuffer, or Base64 string) and returns an XLSX.WorkBook object.
+ * This internal helper centralizes the data parsing logic.
+ * @param data The input data which can be a File, ArrayBuffer, or Base64 string.
+ * @returns A Promise that resolves with the XLSX.WorkBook object.
+ */
+async function getWorkbookFromData(data: File | ArrayBuffer | string): Promise<XLSX.WorkBook> {
+  if (data instanceof File) {
+    const arrayBuffer = await readFileAsArrayBuffer(data);
+    return XLSX.read(arrayBuffer, { type: 'array' });
+  } else if (data instanceof ArrayBuffer) {
+    return XLSX.read(data, { type: 'array' });
+  } else if (typeof data === 'string') {
+    // Assume string is Base64 encoded Excel data
+    return XLSX.read(data, { type: 'base64' });
+  } else {
+    throw new Error("Unsupported data type provided. Expected File, ArrayBuffer, or Base64 string.");
+  }
+}
+
+/**
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and returns the count of rows up to the maximum row
  * that contains at least one non-empty value in any column within the specified sheet.
  * This effectively gives the "last data row number" of the sheet.
  *
- * @param file The File object representing the Excel file. Can be null if no file is selected.
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
  * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
  * @returns A Promise that resolves with the count of rows up to the last data row, or rejects with an error.
  */
-export async function getExcelRowCount(file: File | null, sheetName?: string): Promise<number> {
-  if (!file) {
-    throw new Error("No file provided. Please select an Excel file.");
+export async function getExcelRowCount(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<number> {
+  if (!data) {
+    throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
   }
 
   try {
-    const arrayBuffer: ArrayBuffer = await readFileAsArrayBuffer(file);
-    const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook: XLSX.WorkBook = await getWorkbookFromData(data);
 
     const targetSheetName: string = sheetName || workbook.SheetNames[0];
 
@@ -92,26 +111,24 @@ export async function getExcelRowCount(file: File | null, sheetName?: string): P
     return maxRowWithData;
 
   } catch (error: any) {
-    throw new Error(`Failed to get row count from Excel file: ${error.message}`);
+    throw new Error(`Failed to get row count from Excel data: ${error.message}`);
   }
 }
 
 /**
- * Reads an Excel file (from a File object) and returns the headers (first row) of a specified sheet.
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and returns the headers (first row) of a specified sheet.
  *
- * @param file The File object representing the Excel file. Can be null if no file is selected.
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
  * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
  * @returns A Promise that resolves with an array of header strings, or rejects with an error.
  */
-export async function getExcelHeaders(file: File | null, sheetName?: string): Promise<string[]> {
-  if (!file) {
-    throw new Error("No file provided. Please select an Excel file.");
+export async function getExcelHeaders(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<string[]> {
+  if (!data) {
+    throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
   }
 
   try {
-    const arrayBuffer: ArrayBuffer = await readFileAsArrayBuffer(file);
-    const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
-
+    const workbook: XLSX.WorkBook = await getWorkbookFromData(data);
     const targetSheetName: string = sheetName || workbook.SheetNames[0];
 
     if (!workbook.SheetNames.includes(targetSheetName)) {
@@ -133,28 +150,27 @@ export async function getExcelHeaders(file: File | null, sheetName?: string): Pr
     }
 
   } catch (error: any) {
-    throw new Error(`Failed to get headers from Excel file: ${error.message}`);
+    throw new Error(`Failed to get headers from Excel data: ${error.message}`);
   }
 }
 
 /**
- * Reads an Excel file (from a File object) and checks if a specific column (identified by its header name)
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and checks if a specific column (identified by its header name)
  * contains any non-empty values in its data rows.
  *
- * @param file The File object representing the Excel file. Can be null if no file is selected.
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
  * @param headerName The exact name of the header column to check.
  * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
  * @returns A Promise that resolves with `true` if the column has at least one non-empty value, `false` otherwise.
- * Rejects with an error if the file or sheet is not found, or if the header name does not exist.
+ * Rejects with an error if the data or sheet is not found, or if the header name does not exist.
  */
-export async function isExcelColumnPopulated(file: File | null, headerName: string, sheetName?: string): Promise<boolean> {
-  if (!file) {
-    throw new Error("No file provided. Please select an Excel file.");
+export async function isExcelColumnPopulated(data: File | ArrayBuffer | string | null, headerName: string, sheetName?: string): Promise<boolean> {
+  if (!data) {
+    throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
   }
 
   try {
-    const arrayBuffer: ArrayBuffer = await readFileAsArrayBuffer(file);
-    const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook: XLSX.WorkBook = await getWorkbookFromData(data);
 
     const targetSheetName: string = sheetName || workbook.SheetNames[0];
 
@@ -193,6 +209,6 @@ export async function isExcelColumnPopulated(file: File | null, headerName: stri
 
     return false; // No populated cells found in the column
   } catch (error: any) {
-    throw new Error(`Failed to check column population in Excel file: ${error.message}`);
+    throw new Error(`Failed to check column population in Excel data: ${error.message}`);
   }
 }
