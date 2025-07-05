@@ -22,7 +22,7 @@ interface ExcelCell {
  * @param file The File object from a user input.
  * @returns A Promise that resolves with the ArrayBuffer of the file.
  */
-async function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+export async function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
