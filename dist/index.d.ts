@@ -1,4 +1,12 @@
 /**
+ * Interface for the result object returned by findSpecialCharacterCells.
+ */
+interface SpecialCharacterCellResult {
+    columnName: string;
+    cellAddress: string;
+    cellValue: string;
+}
+/**
  * Helper function to read a File object as an ArrayBuffer.
  * This is necessary because XLSX.read expects an ArrayBuffer for browser environments.
  * @param file The File object from a user input.
@@ -34,3 +42,15 @@ export declare function getExcelHeaders(data: File | ArrayBuffer | string | null
  * Rejects with an error if the data or sheet is not found, or if the header name does not exist.
  */
 export declare function isExcelColumnPopulated(data: File | ArrayBuffer | string | null, headerName: string, sheetName?: string): Promise<boolean>;
+/**
+ * Reads an Excel file and finds cells that contain special characters.
+ * Special characters are defined as anything that is not an alphanumeric character or common whitespace.
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string). Can be null if no data is provided.
+ * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
+ * @returns A Promise that resolves with an array of SpecialCharacterCellResult objects,
+ * each containing the column name, cell address, and the cell value.
+ * Rejects with an error if the data or sheet is not found.
+ */
+export declare function findSpecialCharacterCells(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<SpecialCharacterCellResult[]>;
+export {};
