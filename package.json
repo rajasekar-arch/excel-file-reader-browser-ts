@@ -1,0 +1,50 @@
+{
+  "name": "excel-file-reader-browser-ts",
+  "version": "1.0.0",
+  "description": "A browser-compatible TypeScript utility for reading Excel files from File objects.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "keywords": [
+    "excel",
+    "xlsx",
+    "reader",
+    "typescript",
+    "browser",
+    "angular",
+    "react",
+    "vue",
+    "file",
+    "upload",
+    "rows",
+    "headers",
+    "column check"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajasekar-arch/excel-file-reader-browser-ts.git"
+  },
+  "author": "Rajasekar E C <rajasekar_e_c@outlook.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rajasekar-arch/excel-file-reader-browser-ts/issues"
+  },
+  "homepage": "https://github.com/rajasekar-arch/excel-file-reader-browser-ts#readme",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.10",
+    "jest": "^30.0.4",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "files": [
+    "dist"
+  ]
+}
