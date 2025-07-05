@@ -53,4 +53,15 @@ export declare function isExcelColumnPopulated(data: File | ArrayBuffer | string
  * Rejects with an error if the data or sheet is not found.
  */
 export declare function findSpecialCharacterCells(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<SpecialCharacterCellResult[]>;
+/**
+ * Reads an Excel file and finds any duplicate headers in a specified sheet.
+ * It can check for duplicates in a case-sensitive or case-insensitive manner.
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string). Can be null if no data is provided.
+ * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
+ * @param caseInsensitive (Optional) If true, performs a case-insensitive check for duplicates. Defaults to true.
+ * @returns A Promise that resolves with an array of strings, where each string is a header name that appears more than once.
+ * Rejects with an error if the data or sheet is not found.
+ */
+export declare function findDuplicateHeaders(data: File | ArrayBuffer | string | null, sheetName?: string, caseInsensitive?: boolean): Promise<string[]>;
 export {};
