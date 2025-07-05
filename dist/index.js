@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.readFileAsArrayBuffer = readFileAsArrayBuffer;
 exports.getExcelRowCount = getExcelRowCount;
 exports.getExcelHeaders = getExcelHeaders;
 exports.isExcelColumnPopulated = isExcelColumnPopulated;
@@ -61,44 +62,88 @@ async function readFileAsArrayBuffer(file) {
     });
 }
 /**
- * Reads an Excel file (from a File object) and returns the total number of rows in a specified sheet.
- * This count includes header rows.
- *
- * @param file The File object representing the Excel file.
- * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
- * @returns A Promise that resolves with the total number of rows, or rejects with an error.
+ * Processes the input data (File, ArrayBuffer, or Base64 string) and returns an XLSX.WorkBook object.
+ * This internal helper centralizes the data parsing logic.
+ * @param data The input data which can be a File, ArrayBuffer, or Base64 string.
+ * @returns A Promise that resolves with the XLSX.WorkBook object.
  */
-async function getExcelRowCount(file, sheetName) {
+async function getWorkbookFromData(data) {
+    if (data instanceof File) {
+        const arrayBuffer = await readFileAsArrayBuffer(data);
+        return XLSX.read(arrayBuffer, { type: 'array' });
+    }
+    else if (data instanceof ArrayBuffer) {
+        return XLSX.read(data, { type: 'array' });
+    }
+    else if (typeof data === 'string') {
+        // Assume string is Base64 encoded Excel data
+        return XLSX.read(data, { type: 'base64' });
+    }
+    else {
+        throw new Error("Unsupported data type provided. Expected File, ArrayBuffer, or Base64 string.");
+    }
+}
+/**
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and returns the count of rows up to the maximum row
+ * that contains at least one non-empty value in any column within the specified sheet.
+ * This effectively gives the "last data row number" of the sheet.
+ *
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
+ * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
+ * @returns A Promise that resolves with the count of rows up to the last data row, or rejects with an error.
+ */
+async function getExcelRowCount(data, sheetName) {
+    if (!data) {
+        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+    }
     try {
-        const arrayBuffer = await readFileAsArrayBuffer(file);
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = await getWorkbookFromData(data);
         const targetSheetName = sheetName || workbook.SheetNames[0];
         if (!workbook.SheetNames.includes(targetSheetName)) {
             throw new Error(`Sheet '${targetSheetName}' not found in the Excel file.`);
         }
         const worksheet = workbook.Sheets[targetSheetName];
+        // If the worksheet has no defined range (!ref), it's considered empty.
         if (!worksheet || !worksheet['!ref']) {
-            return 0; // Empty sheet or no defined range
+            return 0;
         }
+        let maxRowWithData = 0;
         const range = XLSX.utils.decode_range(worksheet['!ref']);
-        const rowCount = range.e.r + 1;
-        return rowCount;
+        // Iterate through all cells within the detected range of the worksheet
+        for (let R = range.s.r; R <= range.e.r; ++R) { // R is 0-based row index
+            for (let C = range.s.c; C <= range.e.c; ++C) { // C is 0-based column index
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                const cell = worksheet[cellAddress]; // Use ExcelCell interface
+                // Check if the cell exists and has a non-empty value
+                if (cell && cell.v !== undefined && cell.v !== null) {
+                    const cellValue = String(cell.v).trim();
+                    if (cellValue !== '') {
+                        // Update maxRowWithData if this cell's row is higher than previously found
+                        // R is 0-based, so R + 1 gives the actual row number
+                        maxRowWithData = Math.max(maxRowWithData, R + 1);
+                    }
+                }
+            }
+        }
+        return maxRowWithData;
     }
     catch (error) {
-        throw new Error(`Failed to get row count from Excel file: ${error.message}`);
+        throw new Error(`Failed to get row count from Excel data: ${error.message}`);
     }
 }
 /**
- * Reads an Excel file (from a File object) and returns the headers (first row) of a specified sheet.
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and returns the headers (first row) of a specified sheet.
  *
- * @param file The File object representing the Excel file.
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
  * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
  * @returns A Promise that resolves with an array of header strings, or rejects with an error.
  */
-async function getExcelHeaders(file, sheetName) {
+async function getExcelHeaders(data, sheetName) {
+    if (!data) {
+        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+    }
     try {
-        const arrayBuffer = await readFileAsArrayBuffer(file);
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = await getWorkbookFromData(data);
         const targetSheetName = sheetName || workbook.SheetNames[0];
         if (!workbook.SheetNames.includes(targetSheetName)) {
             throw new Error(`Sheet '${targetSheetName}' not found in the Excel file.`);
@@ -109,30 +154,32 @@ async function getExcelHeaders(file, sheetName) {
         }
         const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 0, raw: false });
         if (headers.length > 0 && Array.isArray(headers[0])) {
-            return headers[0].filter(header => typeof header === 'string' && header.trim() !== '');
+            return headers[0].filter((header) => typeof header === 'string' && header.trim() !== '');
         }
         else {
             return []; // No headers found
         }
     }
     catch (error) {
-        throw new Error(`Failed to get headers from Excel file: ${error.message}`);
+        throw new Error(`Failed to get headers from Excel data: ${error.message}`);
     }
 }
 /**
- * Reads an Excel file (from a File object) and checks if a specific column (identified by its header name)
+ * Reads an Excel file (from a File, ArrayBuffer, or Base64 string) and checks if a specific column (identified by its header name)
  * contains any non-empty values in its data rows.
  *
- * @param file The File object representing the Excel file.
+ * @param data The input data which can be a File object, an ArrayBuffer, or a Base64 encoded string. Can be null if no data is provided.
  * @param headerName The exact name of the header column to check.
  * @param sheetName (Optional) The name of the sheet to read. If not provided, the first sheet will be used.
  * @returns A Promise that resolves with `true` if the column has at least one non-empty value, `false` otherwise.
- * Rejects with an error if the file or sheet is not found, or if the header name does not exist.
+ * Rejects with an error if the data or sheet is not found, or if the header name does not exist.
  */
-async function isExcelColumnPopulated(file, headerName, sheetName) {
+async function isExcelColumnPopulated(data, headerName, sheetName) {
+    if (!data) {
+        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+    }
     try {
-        const arrayBuffer = await readFileAsArrayBuffer(file);
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = await getWorkbookFromData(data);
         const targetSheetName = sheetName || workbook.SheetNames[0];
         if (!workbook.SheetNames.includes(targetSheetName)) {
             throw new Error(`Sheet '${targetSheetName}' not found in the Excel file.`);
@@ -141,16 +188,21 @@ async function isExcelColumnPopulated(file, headerName, sheetName) {
         if (!worksheet || !worksheet['!ref']) {
             return false; // Empty sheet, no data, so column is not populated
         }
+        // Explicitly type jsonData as an array of objects with string index signatures
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
         if (jsonData.length === 0) {
             return false; // No data rows, so column is not populated
         }
+        // Check if the header exists in the first data row (which represents the header row in this context)
         const headers = Object.keys(jsonData[0]);
         if (!headers.includes(headerName)) {
             throw new Error(`Header '${headerName}' not found in the Excel sheet.`);
         }
+        // Iterate through data rows (skipping the header row, as sheet_to_json already handles it)
         for (const row of jsonData) {
+            // Now 'row' is typed as ExcelRow, allowing string indexing
             const value = row[headerName];
+            // Check if the value is not null, undefined, and not an empty string after trimming
             if (value !== null && value !== undefined && String(value).trim() !== '') {
                 return true; // Found at least one populated cell in the column
             }
@@ -158,6 +210,6 @@ async function isExcelColumnPopulated(file, headerName, sheetName) {
         return false; // No populated cells found in the column
     }
     catch (error) {
-        throw new Error(`Failed to check column population in Excel file: ${error.message}`);
+        throw new Error(`Failed to check column population in Excel data: ${error.message}`);
     }
 }
