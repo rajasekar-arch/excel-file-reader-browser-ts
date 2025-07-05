@@ -1,0 +1,59 @@
+CREATE AND PUBLISH NEW NPM PACKAGE:
+-----------------------------------------------------------------
+
+1. npm init -y
+
+2. npx tsc 
+
+3. Create src/index.tsc
+
+4. update the Package.json
+
+{
+  "name": "your-package-name",
+  "version": "1.0.0",
+  "main": "dist/index.js", // path to built output
+  "types": "dist/index.d.ts", // optional for TypeScript
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["your", "keywords"],
+  "author": "Your Name",
+  "license": "MIT"
+}
+
+5. create a test folder and add steps to test the implementation
+
+6. Add a Readme.md content in detail
+
+7. create .gitignore file and add node_modules
+
+8. npm build
+
+9. npm login
+
+1o. npm publish
+
+11. Done !!
+
+
+---------------------------------------------------------------------
+UPDATE PATCH version
+---------------------------------------------------------------------
+
+1. code changes should be done in index.ts
+
+2.`npm version patch`
+
+This automatically:
+Increments the patch version (e.g., 1.0.0 → 1.0.1)
+Creates a git commit and tag if it's a Git repo
+
+3.npm run build
+Make sure the dist folder is updated.
+
+4.npm publish
+
+5. Done !!
+
