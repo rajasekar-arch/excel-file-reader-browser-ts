@@ -71,8 +71,9 @@ file selected, sheet not found, or header not found.
 Installation To install excel-file-reader-browser-ts in your front-end
 project, use npm or yarn:
 
-npm install excel-file-reader-browser-ts xlsx \# or yarn add
-excel-file-reader-browser-ts xlsx
+# npm install excel-file-reader-browser-ts xlsx 
+ or
+# yarn add excel-file-reader-browser-ts xlsx
 
 Note: While excel-file-reader-browser-ts handles xlsx internally, you
 might still need to install xlsx directly if your project uses other
@@ -100,9 +101,15 @@ const count = await getExcelRowCount(buffer);
 // Headers only
 const allHeaders = await getExcelHeaders(buffer);
 
-// Is Any speacial chars are avaialble in the cells
+// Is Any special chars are avaialble in the cells
 const specialChars = await findSpecialCharacterCells(buffer);
 
+// Get Number of Columns
+const columnsCount = await getExcelColumnCount(buffer);
+
+// Get Raw Data in a 2D array Format
+
+const getRawData = await getExcelRawData(buffer)
 ```
 
 # Contributing
