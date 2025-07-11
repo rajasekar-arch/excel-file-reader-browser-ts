@@ -40,6 +40,8 @@ exports.getExcelHeaders = getExcelHeaders;
 exports.isExcelColumnPopulated = isExcelColumnPopulated;
 exports.findSpecialCharacterCells = findSpecialCharacterCells;
 exports.findDuplicateHeaders = findDuplicateHeaders;
+exports.getExcelColumnCount = getExcelColumnCount;
+exports.getExcelRawData = getExcelRawData;
 const XLSX = __importStar(require("xlsx"));
 /**
  * Helper function to read a File object as an ArrayBuffer.
@@ -326,6 +328,54 @@ async function findDuplicateHeaders(data, sheetName, caseInsensitive = true) {
         return duplicateHeaders;
     }
     catch (error) {
-        throw new Error(`Failed to find duplicate headers in Excel data: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to find duplicate headers in Excel data: ${errorMessage}`);
     }
+}
+/**
+ * Reads an Excel file and returns the number of columns from the header row.
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string)
+ * @param sheetName Optional sheet name. Defaults to the first sheet.
+ * @returns A Promise resolving to the number of columns.
+ */
+async function getExcelColumnCount(data, sheetName) {
+    var _a;
+    if (!data) {
+        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+    }
+    const workbook = await getWorkbookFromData(data);
+    const targetSheetName = sheetName || workbook.SheetNames[0];
+    if (!workbook.SheetNames.includes(targetSheetName)) {
+        throw new Error(`Sheet '${targetSheetName}' not found in the Excel file.`);
+    }
+    const worksheet = workbook.Sheets[targetSheetName];
+    if (!worksheet || !worksheet['!ref'])
+        return 0;
+    const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+    return ((_a = sheetData[0]) === null || _a === void 0 ? void 0 : _a.length) || 0;
+}
+/**
+ * Reads an Excel file and returns the raw data as a 2D array (rows × columns).
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string)
+ * @param sheetName Optional sheet name. Defaults to the first sheet.
+ * @returns A Promise resolving to a 2D array of strings.
+ */
+async function getExcelRawData(data, sheetName) {
+    if (!data) {
+        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+    }
+    const workbook = await getWorkbookFromData(data);
+    const targetSheetName = sheetName || workbook.SheetNames[0];
+    if (!workbook.SheetNames.includes(targetSheetName)) {
+        throw new Error(`Sheet '${targetSheetName}' not found in the Excel file.`);
+    }
+    const worksheet = workbook.Sheets[targetSheetName];
+    if (!worksheet || !worksheet['!ref'])
+        return [];
+    const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+    // Convert all cell values to strings and normalize undefined/null to ''
+    const formattedData = sheetData.map(row => row.map(cell => (cell !== null && cell !== undefined) ? String(cell === null || cell === void 0 ? void 0 : cell.trim()) : ''));
+    return formattedData;
 }

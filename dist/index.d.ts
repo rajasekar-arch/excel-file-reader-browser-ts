@@ -64,4 +64,20 @@ export declare function findSpecialCharacterCells(data: File | ArrayBuffer | str
  * Rejects with an error if the data or sheet is not found.
  */
 export declare function findDuplicateHeaders(data: File | ArrayBuffer | string | null, sheetName?: string, caseInsensitive?: boolean): Promise<string[]>;
+/**
+ * Reads an Excel file and returns the number of columns from the header row.
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string)
+ * @param sheetName Optional sheet name. Defaults to the first sheet.
+ * @returns A Promise resolving to the number of columns.
+ */
+export declare function getExcelColumnCount(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<number>;
+/**
+ * Reads an Excel file and returns the raw data as a 2D array (rows × columns).
+ *
+ * @param data The input data (File, ArrayBuffer, or Base64 string)
+ * @param sheetName Optional sheet name. Defaults to the first sheet.
+ * @returns A Promise resolving to a 2D array of strings.
+ */
+export declare function getExcelRawData(data: File | ArrayBuffer | string | null, sheetName?: string): Promise<string[][]>;
 export {};
