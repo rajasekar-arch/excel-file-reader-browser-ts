@@ -45,6 +45,7 @@
     "xlsx": "^0.18.5"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/changelog.json"
   ]
 }
