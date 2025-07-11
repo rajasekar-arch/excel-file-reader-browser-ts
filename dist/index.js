@@ -19,5 +19,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.changelog = void 0;
 __exportStar(require("./file-reader-functions/excel-file-functions"), exports);
+__exportStar(require("./file-reader-functions/file-meta-data"), exports);
 const changelog_json_1 = __importDefault(require("./changelog.json"));
 exports.changelog = changelog_json_1.default;
