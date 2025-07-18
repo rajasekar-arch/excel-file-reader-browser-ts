@@ -19,6 +19,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.changelog = void 0;
 __exportStar(require("./file-reader-functions/excel-file-functions"), exports);
+__exportStar(require("./file-reader-functions/excel-headers"), exports);
+__exportStar(require("./file-reader-functions/excel-raw-data"), exports);
+__exportStar(require("./file-reader-functions/excel-row-count"), exports);
 __exportStar(require("./file-reader-functions/file-meta-data"), exports);
+__exportStar(require("./file-reader-functions/find-duplicate-headers"), exports);
+__exportStar(require("./file-reader-functions/find-special-character-cells"), exports);
+__exportStar(require("./file-reader-functions/is-column-data-available"), exports);
 const changelog_json_1 = __importDefault(require("./changelog.json"));
 exports.changelog = changelog_json_1.default;
