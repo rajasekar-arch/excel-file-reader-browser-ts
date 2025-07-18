@@ -1,6 +1,6 @@
 {
   "name": "excel-file-reader-browser-ts",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A browser-compatible TypeScript utility for reading Excel files from File objects.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
