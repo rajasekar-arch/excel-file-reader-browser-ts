@@ -37,12 +37,12 @@ export async function getExcelMetadata(
             : XLSX.read(data, { type: typeof data === 'string' ? 'base64' : 'array' });
 
     const sheetDetails = workbook.SheetNames.map((sheetName: string) => {
-        const sheet:XLSX.WorkSheet = workbook.Sheets[sheetName];
+        const sheet: XLSX.WorkSheet = workbook.Sheets[sheetName];
         const ref: string | undefined = sheet['!ref'];
         let totalRows: number = 0;
         let totalColumns: number = 0;
         if (ref) {
-            const range:XLSX.Range = XLSX.utils.decode_range(ref);
+            const range: XLSX.Range = XLSX.utils.decode_range(ref);
             totalRows = range.e.r - range.s.r + 1;
             totalColumns = range.e.c - range.s.c + 1;
         }

@@ -1,5 +1,7 @@
 # excel-file-reader-browser-ts
 
+[![Hits](https://hits.sh/github.com/rajasekar-arch/excel-file-reader-browser-ts.svg?style=flat-square)](https://hits.sh/github.com/rajasekar-arch/excel-file-reader-browser-ts/)
+
 A robust and efficient TypeScript utility
 designed specifically for browser environments to read Excel files
 (.xlsx, .xls) from user-uploaded File objects. This package provides
@@ -71,8 +73,10 @@ file selected, sheet not found, or header not found.
 Installation To install excel-file-reader-browser-ts in your front-end
 project, use npm or yarn:
 
-# npm install excel-file-reader-browser-ts xlsx 
- or
+# npm install excel-file-reader-browser-ts xlsx
+
+or
+
 # yarn add excel-file-reader-browser-ts xlsx
 
 Note: While excel-file-reader-browser-ts handles xlsx internally, you
@@ -119,4 +123,15 @@ feature request, please open an issue on the GitHub repository.
 
 # Demo Link
 
-[demo](https://rajasekar-arch.github.io/excel-file-reader-ui/)
+[Try This Link to See the Real Time Usage](https://rajasekar-arch.github.io/excel-file-reader-ui/)
+
+-It helps you to understand, how this package will work in real time
+
+❤️ Support & Share
+
+If you find `excel-file-reader-browser-ts` helpful, please consider sharing your experience!
+Post about it on LinkedIn, Twitter, or any social media platform.
+Tag me or the project so we can feature your post!!
+Or simply drop me an email at: `rajasekar_e_c@outlook.com` – I’d love to hear how you are using this package!
+
+Your support helps others discover this library and keeps the project growing!
