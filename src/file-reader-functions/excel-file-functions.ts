@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
  * @param chunkSize The chunk size (default 4MB).
  * @returns A Promise that resolves with the ArrayBuffer of the file.
  */
-export async function readFileAsArrayBuffer(file: File, chunkSize = 0.2 * 1024 * 1024): Promise<ArrayBuffer> {
+export async function readFileAsArrayBuffer(file: File, chunkSize = 0.1 * 1024 * 1024): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const fileSize = file.size;
     let offset = 0;
