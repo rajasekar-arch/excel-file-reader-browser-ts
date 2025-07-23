@@ -38,60 +38,74 @@ exports.getWorkbookFromData = getWorkbookFromData;
 exports.getExcelColumnCount = getExcelColumnCount;
 const XLSX = __importStar(require("xlsx"));
 /**
- * Helper function to read a File object as an ArrayBuffer.
- * This is necessary because XLSX.read expects an ArrayBuffer for browser environments.
- * @param file The File object from a user input.
+ * Reads a File as ArrayBuffer in chunks (to handle huge files).
+ * @param file The File object from input.
+ * @param chunkSize The chunk size (default 4MB).
  * @returns A Promise that resolves with the ArrayBuffer of the file.
  */
-async function readFileAsArrayBuffer(file) {
+async function readFileAsArrayBuffer(file, chunkSize = 4 * 1024 * 1024) {
     return new Promise((resolve, reject) => {
+        const fileSize = file.size;
+        let offset = 0;
+        const chunks = [];
         const reader = new FileReader();
         reader.onload = (e) => {
             var _a;
             if (((_a = e.target) === null || _a === void 0 ? void 0 : _a.result) instanceof ArrayBuffer) {
-                resolve(e.target.result);
+                chunks.push(new Uint8Array(e.target.result));
+                offset += chunkSize;
+                if (offset < fileSize) {
+                    readNextChunk();
+                }
+                else {
+                    // Combine chunks into a single ArrayBuffer
+                    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                    const combined = new Uint8Array(totalLength);
+                    let position = 0;
+                    for (const chunk of chunks) {
+                        combined.set(chunk, position);
+                        position += chunk.length;
+                    }
+                    resolve(combined.buffer);
+                }
             }
             else {
-                reject(new Error("Failed to read file as ArrayBuffer."));
+                reject(new Error("Failed to read file chunk as ArrayBuffer."));
             }
         };
-        reader.onerror = (err) => { var _a; return reject(new Error(`File reading error: ${((_a = reader.error) === null || _a === void 0 ? void 0 : _a.message) || 'Unknown error'}`)); };
-        reader.readAsArrayBuffer(file);
+        reader.onerror = () => { var _a; return reject(new Error(`File reading error: ${((_a = reader.error) === null || _a === void 0 ? void 0 : _a.message) || 'Unknown error'}`)); };
+        function readNextChunk() {
+            const slice = file.slice(offset, offset + chunkSize);
+            reader.readAsArrayBuffer(slice);
+        }
+        readNextChunk();
     });
 }
 /**
- * Processes the input data (File, ArrayBuffer, or Base64 string) and returns an XLSX.WorkBook object.
- * This internal helper centralizes the data parsing logic.
- * @param data The input data which can be a File, ArrayBuffer, or Base64 string.
- * @returns A Promise that resolves with the XLSX.WorkBook object.
+ * Gets an XLSX.WorkBook object from File, ArrayBuffer, or Base64 string.
  */
 async function getWorkbookFromData(data) {
     if (data instanceof File) {
         const arrayBuffer = await readFileAsArrayBuffer(data);
-        return XLSX.read(arrayBuffer, { type: 'array' });
+        return XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
     }
     else if (data instanceof ArrayBuffer) {
-        return XLSX.read(data, { type: 'array' });
+        return XLSX.read(data, { type: 'array', cellDates: true });
     }
     else if (typeof data === 'string') {
-        // Assume string is Base64 encoded Excel data
-        return XLSX.read(data, { type: 'base64' });
+        return XLSX.read(data, { type: 'base64', cellDates: true });
     }
     else {
-        throw new Error("Unsupported data type provided. Expected File, ArrayBuffer, or Base64 string.");
+        throw new Error("Unsupported data type. Provide File, ArrayBuffer, or Base64 string.");
     }
 }
 /**
- * Reads an Excel file and returns the number of columns from the header row.
- *
- * @param data The input data (File, ArrayBuffer, or Base64 string)
- * @param sheetName Optional sheet name. Defaults to the first sheet.
- * @returns A Promise resolving to the number of columns.
+ * Efficiently retrieves the column count from the first row of an Excel sheet.
+ * It processes only the first row instead of loading all rows.
  */
 async function getExcelColumnCount(data, sheetName) {
-    var _a;
     if (!data) {
-        throw new Error("No data provided. Please provide a File, ArrayBuffer, or Base64 string.");
+        throw new Error("No data provided. Provide a File, ArrayBuffer, or Base64 string.");
     }
     const workbook = await getWorkbookFromData(data);
     const targetSheetName = sheetName || workbook.SheetNames[0];
@@ -101,6 +115,8 @@ async function getExcelColumnCount(data, sheetName) {
     const worksheet = workbook.Sheets[targetSheetName];
     if (!worksheet || !worksheet['!ref'])
         return 0;
-    const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
-    return ((_a = sheetData[0]) === null || _a === void 0 ? void 0 : _a.length) || 0;
+    // Extract only the first row for performance
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, range: 0 });
+    const headerRow = rows[0] || [];
+    return headerRow.length;
 }
