@@ -42,6 +42,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "ts-node": "^10.9.2",
     "xlsx": "^0.18.5"
   },
   "files": [
