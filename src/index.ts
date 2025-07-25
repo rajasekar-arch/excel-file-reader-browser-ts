@@ -6,6 +6,8 @@ export * from './file-reader-functions/file-meta-data';
 export * from './file-reader-functions/find-duplicate-headers';
 export * from './file-reader-functions/find-special-character-cells';
 export * from './file-reader-functions/is-column-data-available';
+export * from './file-reader-functions/download-csv';
+export * from './file-reader-functions/download-json';
 
 import changelog from './changelog.json';
 
