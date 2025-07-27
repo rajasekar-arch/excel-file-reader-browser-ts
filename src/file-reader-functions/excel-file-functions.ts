@@ -1,4 +1,14 @@
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
+
+ // Find the file name of uploaded file as a golbal variable
+export function getFileName(file: File): string {
+  if (!file || !file.name) {
+    return "unknown";
+  }
+  return file.name;
+  
+}
+
 
 /**
  * Reads a File as ArrayBuffer in chunks (to handle huge files).
@@ -6,9 +16,20 @@ import * as XLSX from 'xlsx';
  * @param chunkSize The chunk size (default 4MB).
  * @returns A Promise that resolves with the ArrayBuffer of the file.
  */
-export async function readFileAsArrayBuffer(file: File, chunkSize = 0.1 * 1024 * 1024): Promise<ArrayBuffer> {
+export async function readFileAsArrayBuffer(
+  file: File,
+  chunkSize = 0.1 * 1024 * 1024
+): Promise<ArrayBuffer> {
+ 
   return new Promise((resolve, reject) => {
     const fileSize = file.size;
+    if (fileSize <= 0) {
+      return reject(new Error("File is empty."));
+    }
+    if (chunkSize <= 0 || chunkSize > fileSize) {
+      return reject(new Error("Invalid chunk size."));
+    }
+
     let offset = 0;
     const chunks: Uint8Array[] = [];
     const reader = new FileReader();
@@ -21,7 +42,10 @@ export async function readFileAsArrayBuffer(file: File, chunkSize = 0.1 * 1024 *
           readNextChunk();
         } else {
           // Combine chunks into a single ArrayBuffer
-          const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+          const totalLength = chunks.reduce(
+            (sum, chunk) => sum + chunk.length,
+            0
+          );
           const combined = new Uint8Array(totalLength);
           let position = 0;
           for (const chunk of chunks) {
@@ -35,7 +59,12 @@ export async function readFileAsArrayBuffer(file: File, chunkSize = 0.1 * 1024 *
       }
     };
 
-    reader.onerror = () => reject(new Error(`File reading error: ${reader.error?.message || 'Unknown error'}`));
+    reader.onerror = () =>
+      reject(
+        new Error(
+          `File reading error: ${reader.error?.message || "Unknown error"}`
+        )
+      );
 
     function readNextChunk() {
       const slice = file.slice(offset, offset + chunkSize);
@@ -49,16 +78,20 @@ export async function readFileAsArrayBuffer(file: File, chunkSize = 0.1 * 1024 *
 /**
  * Gets an XLSX.WorkBook object from File, ArrayBuffer, or Base64 string.
  */
-export async function getWorkbookFromData(data: File | ArrayBuffer | string): Promise<XLSX.WorkBook> {
+export async function getWorkbookFromData(
+  data: File | ArrayBuffer | string
+): Promise<XLSX.WorkBook> {
   if (data instanceof File) {
     const arrayBuffer = await readFileAsArrayBuffer(data);
-    return XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+    return XLSX.read(arrayBuffer, { type: "array", cellDates: true });
   } else if (data instanceof ArrayBuffer) {
-    return XLSX.read(data, { type: 'array', cellDates: true });
-  } else if (typeof data === 'string') {
-    return XLSX.read(data, { type: 'base64', cellDates: true });
+    return XLSX.read(data, { type: "array", cellDates: true });
+  } else if (typeof data === "string") {
+    return XLSX.read(data, { type: "base64", cellDates: true });
   } else {
-    throw new Error("Unsupported data type. Provide File, ArrayBuffer, or Base64 string.");
+    throw new Error(
+      "Unsupported data type. Provide File, ArrayBuffer, or Base64 string."
+    );
   }
 }
 
@@ -71,7 +104,9 @@ export async function getExcelColumnCount(
   sheetName?: string
 ): Promise<number> {
   if (!data) {
-    throw new Error("No data provided. Provide a File, ArrayBuffer, or Base64 string.");
+    throw new Error(
+      "No data provided. Provide a File, ArrayBuffer, or Base64 string."
+    );
   }
 
   const workbook: XLSX.WorkBook = await getWorkbookFromData(data);
@@ -82,10 +117,14 @@ export async function getExcelColumnCount(
   }
 
   const worksheet: XLSX.WorkSheet = workbook.Sheets[targetSheetName];
-  if (!worksheet || !worksheet['!ref']) return 0;
+  if (!worksheet || !worksheet["!ref"]) return 0;
 
   // Extract only the first row for performance
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, range: 0 }) as any[][];
+  const rows = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    raw: false,
+    range: 0,
+  }) as any[][];
   const headerRow: any[] = rows[0] || [];
   return headerRow.length;
 }

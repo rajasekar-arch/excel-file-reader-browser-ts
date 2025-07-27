@@ -85,22 +85,31 @@ xlsx utilities.
 
 # Usage
 
-```
+```javascript
 import {
   readFileAsArrayBuffer,
   getExcelRowCount,
   getExcelHeaders,
   isExcelColumnPopulated,
   findSpecialCharacterCells,
-} from 'excel-file-reader-browser-ts';
+} from "excel-file-reader-browser-ts";
 
 // Inside class or function
+
+// Get File Name Extension
+
+const fileType = getFileType(fileName);
+// console.log(fileType)
+
 
 // To Read the excel content as a array buffer
 const buffer = await readFileAsArrayBuffer(file);
 
 // Total Row count in excel sheet
-const count = await getExcelRowCount(buffer);
+const rowCount = await getExcelRowCount(buffer);
+
+// Get Column Count
+const columnCount = await getExcelColumnCount(buffer);
 
 // Headers only
 const allHeaders = await getExcelHeaders(buffer);
@@ -113,7 +122,22 @@ const columnsCount = await getExcelColumnCount(buffer);
 
 // Get Raw Data in a 2D array Format
 
-const getRawData = await getExcelRawData(buffer)
+const getRawData = await getExcelRawData(buffer);
+
+// Get Excel Meta data
+
+const meta = await getExcelMetadata(file);
+// console.log(meta);
+
+// Download the uploaded file as CSV
+
+const buffer = await readFileAsArrayBuffer(file);
+await downloadExcelAsCSV(buffer);
+
+// Download the uploaded file as JSON
+
+const buffer = await readFileAsArrayBuffer(file);
+await downloadExcelAsJSON(buffer);
 ```
 
 # Contributing
